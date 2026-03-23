@@ -679,7 +679,7 @@ html_template = Template(
             animation: fadeInOut ${greeting_seconds}s ease-in-out forwards;
             transform-origin: center center;
             padding: 0 30px;
-            margin-top: -18px;
+            margin-top: -12px;
         }
 
         .left {
