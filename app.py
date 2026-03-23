@@ -1,5 +1,5 @@
 import base64
-from datetime import date, datetime, time
+from datetime import date, datetime
 from pathlib import Path
 from string import Template
 from zoneinfo import ZoneInfo
@@ -35,8 +35,9 @@ st.markdown(
 # -----------------------
 TIMEZONE = "Europe/Athens"
 LOGO_PATH = "logo.png"
+GREETING_FADE_SECONDS = 3
 
-API_KEY = st.secrets["API_KEY"]
+API_KEY = st.secrets.get("API_KEY", "")
 
 OFFICE_LOCATIONS = {
     "Thessaloniki": "Thessaloniki,GR",
@@ -65,19 +66,17 @@ BANK_HOLIDAYS = [
 ]
 
 IKOS_PROPERTIES = [
-    {"name": "Ikos Oceania", "opening": date(2026, 3, 26), "closing": date(2026, 10, 31)},
-    {"name": "Ikos Olivia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31)},
-    {"name": "Ikos Dassia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31)},
-    {"name": "Ikos Aria", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31)},
-    {"name": "Ikos Odisia", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31)},
-    {"name": "Ikos Kissamos", "opening": date(2026, 4, 30), "closing": date(2026, 10, 31)},
-    {"name": "Ikos Andalusia", "opening": date(2026, 3, 26), "closing": date(2026, 11, 7)},
-    {"name": "Ikos Porto Petro", "opening": date(2026, 4, 10), "closing": date(2026, 11, 7)},
+    {"name": "Ikos Oceania", "opening": date(2026, 3, 26), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
+    {"name": "Ikos Olivia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
+    {"name": "Ikos Dassia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
+    {"name": "Ikos Aria", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
+    {"name": "Ikos Odisia", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
+    {"name": "Ikos Kissamos", "opening": date(2026, 4, 30), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
+    {"name": "Ikos Andalusia", "opening": date(2026, 3, 26), "closing": date(2026, 11, 7), "flag": "🇪🇸"},
+    {"name": "Ikos Porto Petro", "opening": date(2026, 4, 10), "closing": date(2026, 11, 7), "flag": "🇪🇸"},
 ]
 
 DUETTO_LIVE_DATE = date(2026, 5, 5)
-
-GREETING_FADE_SECONDS = 3
 
 # -----------------------
 # Helpers
@@ -254,6 +253,16 @@ def fetch_weather(query: str, api_key: str) -> dict:
 
 
 def get_weather_for_city(query: str) -> dict:
+    if not API_KEY:
+        return {
+            "temp": "—",
+            "temp_value": None,
+            "temp_class": get_weather_temp_class(None),
+            "weather": "Unavailable",
+            "condition_class": get_weather_condition_class("Unavailable"),
+            "icon": get_weather_icon_svg("Unavailable"),
+        }
+
     try:
         result = fetch_weather(query, API_KEY)
         status_code = result["status_code"]
@@ -378,9 +387,6 @@ def get_theme_colors(dark_mode: bool) -> dict:
             "alert_warning": "#F59E0B",
             "alert_danger": "#FB7185",
             "alert_weekend": "#34D399",
-            "progress_bg": "#243247",
-            "progress_fill_1": "#3B82F6",
-            "progress_fill_2": "#60A5FA",
             "logo_shadow": "0 2px 10px rgba(0,0,0,0.35)",
             "card_bg": "#101C31",
             "card_border": "#22324A",
@@ -391,6 +397,9 @@ def get_theme_colors(dark_mode: bool) -> dict:
             "card_status_future": "#F59E0B",
             "card_status_live": "#34D399",
             "card_status_done": "#A9B8D0",
+            "right_card_bg": "#101C31",
+            "right_card_border": "#22324A",
+            "right_card_shadow": "0 2px 10px rgba(0,0,0,0.18)",
         }
 
     return {
@@ -405,9 +414,6 @@ def get_theme_colors(dark_mode: bool) -> dict:
         "alert_warning": "#D97706",
         "alert_danger": "#C2410C",
         "alert_weekend": "#2E8B57",
-        "progress_bg": "#E8EDF5",
-        "progress_fill_1": "#1F5FAE",
-        "progress_fill_2": "#4A90E2",
         "logo_shadow": "none",
         "card_bg": "#FFFFFF",
         "card_border": "#E3E8F0",
@@ -418,6 +424,9 @@ def get_theme_colors(dark_mode: bool) -> dict:
         "card_status_future": "#D97706",
         "card_status_live": "#2E8B57",
         "card_status_done": "#6B7280",
+        "right_card_bg": "#FFFFFF",
+        "right_card_border": "#E3E8F0",
+        "right_card_shadow": "0 2px 10px rgba(15, 23, 42, 0.04)",
     }
 
 
@@ -473,7 +482,10 @@ def render_property_cards(properties: list[dict], today_: date) -> str:
         cards.append(
             f"""
             <div class="property-card">
-                <div class="property-card-name">{prop["name"]}</div>
+                <div class="property-card-title-row">
+                    <div class="property-card-name">{prop["name"]}</div>
+                    <div class="property-flag" aria-label="Country flag">{prop["flag"]}</div>
+                </div>
                 <div class="property-card-dates">
                     <span>{format_short_date(prop["opening"])}</span>
                     <span class="property-arrow">→</span>
@@ -492,17 +504,33 @@ def render_property_cards(properties: list[dict], today_: date) -> str:
 
 
 # -----------------------
-# Toggle + theme
+# Toggle + intro state
 # -----------------------
 dark_mode = st.toggle("🌙 Dark mode", value=False)
 theme = get_theme_colors(dark_mode)
+
+if "intro_shown" not in st.session_state:
+    st.session_state.intro_shown = False
 
 # -----------------------
 # Time calculations
 # -----------------------
 now = datetime.now(ZoneInfo(TIMEZONE))
 today = now.date()
+
 greeting = get_greeting_for_hour(now.hour)
+show_greeting = not st.session_state.intro_shown
+st.session_state.intro_shown = True
+
+greeting_overlay_html = ""
+if show_greeting:
+    greeting_overlay_html = f"""
+    <div class="greeting-overlay">
+        <div class="greeting-text">{greeting}</div>
+    </div>
+    """
+
+greeting_delay = GREETING_FADE_SECONDS if show_greeting else 0
 
 # -----------------------
 # Left column cards
@@ -535,7 +563,7 @@ weekend_html = f"""
 duetto_days_remaining = (DUETTO_LIVE_DATE - today).days
 
 duetto_html = f"""
-<div class="section info-section">
+<div class="right-info-card">
     <div class="section-title">Duetto goes live</div>
     <div class="info-name alert-danger">5 May</div>
     <div class="info-days alert-danger">{format_days_text(duetto_days_remaining)}</div>
@@ -543,7 +571,7 @@ duetto_html = f"""
 """
 
 ecommerce_html = """
-<div class="section info-section">
+<div class="right-info-card">
     <div class="section-title">E-commerce goes offline</div>
     <div class="info-name alert-normal">Unknown</div>
 </div>
@@ -605,7 +633,8 @@ html_template = Template(
             height: 100vh;
             background: $bg;
             opacity: 0;
-            animation: dashboardFadeIn 0.9s ease forwards;
+            transform: translateY(10px);
+            animation: dashboardFadeInUp 0.9s ease forwards;
             animation-delay: ${greeting_delay}s;
         }
 
@@ -633,6 +662,7 @@ html_template = Template(
             opacity: 0;
             animation: fadeInOut ${greeting_seconds}s ease-in-out forwards;
             transform-origin: center center;
+            padding: 0 30px;
         }
 
         .left {
@@ -870,12 +900,26 @@ html_template = Template(
             box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
         }
 
+        .property-card-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
         .property-card-name {
             font-size: 18px;
             font-weight: 700;
             color: $text;
-            margin-bottom: 8px;
             line-height: 1.2;
+            flex: 1 1 auto;
+        }
+
+        .property-flag {
+            font-size: 18px;
+            line-height: 1;
+            flex: 0 0 auto;
         }
 
         .property-card-dates {
@@ -936,6 +980,16 @@ html_template = Template(
             text-align: right;
         }
 
+        .right-info-card {
+            background: $right_card_bg;
+            border: 1px solid $right_card_border;
+            border-radius: 18px;
+            padding: 16px;
+            box-sizing: border-box;
+            box-shadow: $right_card_shadow;
+            margin-bottom: 2px;
+        }
+
         @keyframes fadeInOut {
             0%   { opacity: 0; transform: scale(0.96); }
             20%  { opacity: 1; transform: scale(1); }
@@ -950,12 +1004,14 @@ html_template = Template(
             }
         }
 
-        @keyframes dashboardFadeIn {
+        @keyframes dashboardFadeInUp {
             from {
                 opacity: 0;
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -966,6 +1022,10 @@ html_template = Template(
 
             .property-card-name {
                 font-size: 16px;
+            }
+
+            .property-flag {
+                font-size: 17px;
             }
         }
 
@@ -1021,9 +1081,7 @@ html_template = Template(
     </style>
 </head>
 <body>
-    <div class="greeting-overlay">
-        <div class="greeting-text">$greeting</div>
-    </div>
+    $greeting_overlay_html
 
     <div class="page">
         <div class="left">
@@ -1075,9 +1133,9 @@ html_template = Template(
 )
 
 html = html_template.substitute(
-    greeting=greeting,
+    greeting_overlay_html=greeting_overlay_html,
     greeting_seconds=GREETING_FADE_SECONDS,
-    greeting_delay=GREETING_FADE_SECONDS,
+    greeting_delay=greeting_delay,
     office_weather_html=office_weather_html,
     property_weather_html=property_weather_html,
     holiday_html=holiday_html,
@@ -1107,6 +1165,9 @@ html = html_template.substitute(
     card_status_future=theme["card_status_future"],
     card_status_live=theme["card_status_live"],
     card_status_done=theme["card_status_done"],
+    right_card_bg=theme["right_card_bg"],
+    right_card_border=theme["right_card_border"],
+    right_card_shadow=theme["right_card_shadow"],
 )
 
-components.html(html, height=760, scrolling=False)
+components.html(html, height=820, scrolling=False)
