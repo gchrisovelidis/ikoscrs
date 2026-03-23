@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 st.set_page_config(
     page_title="Ikos Dashboard",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 st.markdown(
