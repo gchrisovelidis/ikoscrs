@@ -521,10 +521,10 @@ def get_flag_svg(country: str) -> str:
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
 
-if st.session_state.intro_shown:
-    dark_mode = st.toggle("🌙 Dark mode", value=st.session_state.get("dark_mode", False))
-else:
-    dark_mode = st.session_state.get("dark_mode", False)
+dark_mode = st.sidebar.toggle(
+    "🌙 Dark mode",
+    value=st.session_state.get("dark_mode", False),
+)
 
 st.session_state.dark_mode = dark_mode
 theme = get_theme_colors(dark_mode)
