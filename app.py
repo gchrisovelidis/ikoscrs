@@ -651,9 +651,16 @@ if today_birthdays:
     names = ", ".join(today_birthdays)
 
     birthday_today_html = f"""
-    <div class="right-info-card">
+    <div class="right-info-card birthday-card">
         <div class="section-title">🎉 Celebration</div>
         <div class="info-name alert-weekend">🎉 Happy Birthday {names}!</div>
+
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
     </div>
     """
 
@@ -1170,6 +1177,49 @@ html_template = Template(
                 grid-template-columns: 1fr;
             }
         }
+        /* -----------------------
+    Birthday Premium Effects
+    ----------------------- */
+
+    .birthday-card {
+        position: relative;
+        overflow: hidden;
+        animation: birthdayPulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes birthdayPulse {
+        0%   { box-shadow: 0 0 0 rgba(52, 211, 153, 0.0); }
+        50%  { box-shadow: 0 0 18px rgba(52, 211, 153, 0.25); }
+        100% { box-shadow: 0 0 0 rgba(52, 211, 153, 0.0); }
+    }
+
+    /* Confetti particles */
+    .confetti {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        opacity: 0.7;
+        border-radius: 2px;
+        animation: confettiFall linear infinite;
+    }
+
+    .confetti:nth-child(1) { left: 10%; animation-duration: 3s; background: #F59E0B; }
+    .confetti:nth-child(2) { left: 25%; animation-duration: 3.5s; background: #34D399; }
+    .confetti:nth-child(3) { left: 40%; animation-duration: 2.8s; background: #60A5FA; }
+    .confetti:nth-child(4) { left: 55%; animation-duration: 3.2s; background: #FB7185; }
+    .confetti:nth-child(5) { left: 70%; animation-duration: 3.6s; background: #A78BFA; }
+    .confetti:nth-child(6) { left: 85%; animation-duration: 2.9s; background: #FBBF24; }
+
+    @keyframes confettiFall {
+        0% {
+            top: -10%;
+            transform: translateY(0) rotate(0deg);
+        }
+        100% {
+            top: 110%;
+            transform: translateY(0) rotate(360deg);
+        }
+    }
     </style>
 </head>
 <body>
