@@ -65,15 +65,18 @@ BANK_HOLIDAYS = [
     (date(2026, 12, 26), "2η μέρα Χριστουγέννων"),
 ]
 
-IKOS_PROPERTIES = [
-    {"name": "Ikos Oceania", "opening": date(2026, 3, 26), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
-    {"name": "Ikos Olivia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
-    {"name": "Ikos Dassia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
-    {"name": "Ikos Aria", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
-    {"name": "Ikos Odisia", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
-    {"name": "Ikos Kissamos", "opening": date(2026, 4, 30), "closing": date(2026, 10, 31), "flag": "🇬🇷"},
-    {"name": "Ikos Andalusia", "opening": date(2026, 3, 26), "closing": date(2026, 11, 7), "flag": "🇪🇸"},
-    {"name": "Ikos Porto Petro", "opening": date(2026, 4, 10), "closing": date(2026, 11, 7), "flag": "🇪🇸"},
+GREEK_PROPERTIES = [
+    {"name": "Ikos Oceania", "opening": date(2026, 3, 26), "closing": date(2026, 10, 31)},
+    {"name": "Ikos Olivia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31)},
+    {"name": "Ikos Dassia", "opening": date(2026, 4, 2), "closing": date(2026, 10, 31)},
+    {"name": "Ikos Aria", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31)},
+    {"name": "Ikos Odisia", "opening": date(2026, 4, 23), "closing": date(2026, 10, 31)},
+    {"name": "Ikos Kissamos", "opening": date(2026, 4, 30), "closing": date(2026, 10, 31)},
+]
+
+SPANISH_PROPERTIES = [
+    {"name": "Ikos Andalusia", "opening": date(2026, 3, 26), "closing": date(2026, 11, 7)},
+    {"name": "Ikos Porto Petro", "opening": date(2026, 4, 10), "closing": date(2026, 11, 7)},
 ]
 
 DUETTO_LIVE_DATE = date(2026, 5, 5)
@@ -333,16 +336,6 @@ def get_next_holiday(today_: date):
     return next_name, next_date, days_left
 
 
-def get_holiday_alert_class(days_left) -> str:
-    if days_left is None:
-        return ""
-    if days_left < 3:
-        return "alert-danger"
-    if days_left <= 7:
-        return "alert-warning"
-    return "alert-normal"
-
-
 def get_weekend_indicator(today_: date):
     weekday = today_.weekday()
 
@@ -351,7 +344,6 @@ def get_weekend_indicator(today_: date):
             "title": "Weekend Indicator",
             "name": "Weekend",
             "days_text": "Today",
-            "is_weekend": True,
             "alert_class": "alert-weekend",
         }
 
@@ -368,7 +360,6 @@ def get_weekend_indicator(today_: date):
         "title": "Weekend Indicator",
         "name": "Next weekend",
         "days_text": text,
-        "is_weekend": False,
         "alert_class": alert_class,
     }
 
@@ -482,10 +473,7 @@ def render_property_cards(properties: list[dict], today_: date) -> str:
         cards.append(
             f"""
             <div class="property-card">
-                <div class="property-card-title-row">
-                    <div class="property-card-name">{prop["name"]}</div>
-                    <div class="property-flag" aria-label="Country flag">{prop["flag"]}</div>
-                </div>
+                <div class="property-card-name">{prop["name"]}</div>
                 <div class="property-card-dates">
                     <span>{format_short_date(prop["opening"])}</span>
                     <span class="property-arrow">→</span>
@@ -501,6 +489,30 @@ def render_property_cards(properties: list[dict], today_: date) -> str:
         )
 
     return "".join(cards)
+
+
+def get_flag_svg(country: str) -> str:
+    if country == "gr":
+        return """
+        <svg viewBox="0 0 28 20" aria-hidden="true">
+          <rect width="28" height="20" rx="2" fill="#0D5EAF"></rect>
+          <rect y="2.22" width="28" height="2.22" fill="#FFFFFF"></rect>
+          <rect y="6.66" width="28" height="2.22" fill="#FFFFFF"></rect>
+          <rect y="11.10" width="28" height="2.22" fill="#FFFFFF"></rect>
+          <rect y="15.54" width="28" height="2.22" fill="#FFFFFF"></rect>
+          <rect width="12" height="12" fill="#0D5EAF"></rect>
+          <rect x="4.6" width="2.8" height="12" fill="#FFFFFF"></rect>
+          <rect y="4.6" width="12" height="2.8" fill="#FFFFFF"></rect>
+        </svg>
+        """
+    if country == "es":
+        return """
+        <svg viewBox="0 0 28 20" aria-hidden="true">
+          <rect width="28" height="20" rx="2" fill="#AA151B"></rect>
+          <rect y="5" width="28" height="10" fill="#F1BF00"></rect>
+        </svg>
+        """
+    return ""
 
 
 # -----------------------
@@ -598,7 +610,11 @@ property_weather_html = render_weather_rows(PROPERTY_LOCATIONS, office=False)
 # -----------------------
 # Middle column HTML
 # -----------------------
-property_cards_html = render_property_cards(IKOS_PROPERTIES, today)
+greek_properties_html = render_property_cards(GREEK_PROPERTIES, today)
+spanish_properties_html = render_property_cards(SPANISH_PROPERTIES, today)
+
+greek_flag_svg = get_flag_svg("gr")
+spanish_flag_svg = get_flag_svg("es")
 
 # -----------------------
 # HTML
@@ -685,7 +701,8 @@ html_template = Template(
             flex-direction: column;
             justify-content: flex-start;
             height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .right {
@@ -702,7 +719,6 @@ html_template = Template(
 
         .middle-content {
             width: 100%;
-            height: 100%;
             display: flex;
             flex-direction: column;
         }
@@ -877,18 +893,44 @@ html_template = Template(
             color: $alert_weekend;
         }
 
-        .properties-section {
-            flex: 1 1 auto;
-            min-height: 0;
+        .properties-group {
+            margin-bottom: 24px;
+        }
+
+        .properties-group-header {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .properties-group-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: $section_title;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .group-flag {
+            width: 22px;
+            height: 16px;
+            display: inline-flex;
+            flex: 0 0 auto;
+        }
+
+        .group-flag svg {
+            width: 22px;
+            height: 16px;
+            display: block;
+            border-radius: 2px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
         }
 
         .properties-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
-            overflow: hidden;
         }
 
         .property-card {
@@ -900,26 +942,12 @@ html_template = Template(
             box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
         }
 
-        .property-card-title-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
         .property-card-name {
             font-size: 18px;
             font-weight: 700;
             color: $text;
+            margin-bottom: 8px;
             line-height: 1.2;
-            flex: 1 1 auto;
-        }
-
-        .property-flag {
-            font-size: 18px;
-            line-height: 1;
-            flex: 0 0 auto;
         }
 
         .property-card-dates {
@@ -1023,10 +1051,6 @@ html_template = Template(
             .property-card-name {
                 font-size: 16px;
             }
-
-            .property-flag {
-                font-size: 17px;
-            }
         }
 
         @media (max-width: 1200px) {
@@ -1110,10 +1134,23 @@ html_template = Template(
             <div class="middle-content">
                 $logo_html
 
-                <div class="section properties-section">
-                    <div class="section-title">Opening & Closing Dates</div>
+                <div class="properties-group">
+                    <div class="properties-group-header">
+                        <span class="properties-group-title">Greek Properties</span>
+                        <span class="group-flag">$greek_flag_svg</span>
+                    </div>
                     <div class="properties-grid">
-                        $property_cards_html
+                        $greek_properties_html
+                    </div>
+                </div>
+
+                <div class="properties-group">
+                    <div class="properties-group-header">
+                        <span class="properties-group-title">Spanish Properties</span>
+                        <span class="group-flag">$spanish_flag_svg</span>
+                    </div>
+                    <div class="properties-grid">
+                        $spanish_properties_html
                     </div>
                 </div>
             </div>
@@ -1143,7 +1180,10 @@ html = html_template.substitute(
     duetto_html=duetto_html,
     ecommerce_html=ecommerce_html,
     logo_html=logo_html,
-    property_cards_html=property_cards_html,
+    greek_properties_html=greek_properties_html,
+    spanish_properties_html=spanish_properties_html,
+    greek_flag_svg=greek_flag_svg,
+    spanish_flag_svg=spanish_flag_svg,
     bg=theme["bg"],
     text=theme["text"],
     muted=theme["muted"],
@@ -1170,4 +1210,4 @@ html = html_template.substitute(
     right_card_shadow=theme["right_card_shadow"],
 )
 
-components.html(html, height=820, scrolling=False)
+components.html(html, height=860, scrolling=False)
