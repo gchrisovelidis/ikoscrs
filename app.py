@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 st.set_page_config(
     page_title="Ikos Dashboard",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
@@ -518,16 +518,11 @@ def get_flag_svg(country: str) -> str:
 # -----------------------
 # Toggle + intro state
 # -----------------------
+dark_mode = st.toggle("🌙 Dark mode", value=False)
+theme = get_theme_colors(dark_mode)
+
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
-
-dark_mode = st.sidebar.toggle(
-    "🌙 Dark mode",
-    value=st.session_state.get("dark_mode", False),
-)
-
-st.session_state.dark_mode = dark_mode
-theme = get_theme_colors(dark_mode)
 
 # -----------------------
 # Time calculations
@@ -684,7 +679,6 @@ html_template = Template(
             animation: fadeInOut ${greeting_seconds}s ease-in-out forwards;
             transform-origin: center center;
             padding: 0 30px;
-            margin-top: -12px;
         }
 
         .left {
