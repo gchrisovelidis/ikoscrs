@@ -13,39 +13,58 @@ st.set_page_config(
 # Current time in Greece
 now = datetime.now(ZoneInfo("Europe/Athens"))
 current_hour = now.hour
+current_minute = now.minute
 
 # Greeting logic
-if 7 <= current_hour < 12:
+if current_hour < 7:
+    greeting = "Τι κάνεις εδώ τέτοια ώρα;"
+elif 7 <= current_hour < 12:
     greeting = "Καλημέρα!"
-elif current_hour >= 12:
-    greeting = "Καλησπέρα!"
 else:
-    greeting = ""
+    greeting = "Καλησπέρα!"
 
-# Hide Streamlit default UI
+
+# Remove ALL Streamlit spacing issues
 st.markdown(
     """
     <style>
+    /* Remove Streamlit padding */
+    .block-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
 
-    .stApp {
+    html, body, .stApp {
+        height: 100%;
+        margin: 0;
+        padding: 0;
         background-color: white;
     }
 
+    /* Full screen center */
     .greeting-wrap {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
         height: 100vh;
+
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
     .greeting-text {
-        font-size: 110px;
+        font-size: 120px;
         font-weight: 800;
         color: #111111;
         text-align: center;
+
         opacity: 0;
         animation: fadeInOut 3s ease-in-out forwards;
     }
@@ -61,12 +80,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if greeting:
-    st.markdown(
-        f"""
-        <div class="greeting-wrap">
-            <div class="greeting-text">{greeting}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# Render greeting
+st.markdown(
+    f"""
+    <div class="greeting-wrap">
+        <div class="greeting-text">{greeting}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
