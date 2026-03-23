@@ -645,6 +645,7 @@ birthday_countdown_html = f"""
 """
 
 today_birthdays = get_today_birthdays(today)
+birthday_mode_class = "birthday-mode" if today_birthdays else ""
 
 birthday_today_html = ""
 if today_birthdays:
@@ -1220,12 +1221,80 @@ html_template = Template(
             transform: translateY(0) rotate(360deg);
         }
     }
+    /* -----------------------
+        Birthday Premium Effects
+    ----------------------- */
+
+    .birthday-card {
+        position: relative;
+        overflow: hidden;
+        animation: birthdayPulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes birthdayPulse {
+        0%   { box-shadow: 0 0 0 rgba(52, 211, 153, 0.0); }
+        50%  { box-shadow: 0 0 18px rgba(52, 211, 153, 0.22); }
+        100% { box-shadow: 0 0 0 rgba(52, 211, 153, 0.0); }
+    }
+
+    .confetti {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        opacity: 0.7;
+        border-radius: 2px;
+        animation: confettiFall linear infinite;
+    }
+
+    .confetti:nth-child(3) { left: 10%; animation-duration: 3s; background: #F59E0B; }
+    .confetti:nth-child(4) { left: 25%; animation-duration: 3.5s; background: #34D399; }
+    .confetti:nth-child(5) { left: 40%; animation-duration: 2.8s; background: #60A5FA; }
+    .confetti:nth-child(6) { left: 55%; animation-duration: 3.2s; background: #FB7185; }
+    .confetti:nth-child(7) { left: 70%; animation-duration: 3.6s; background: #A78BFA; }
+    .confetti:nth-child(8) { left: 85%; animation-duration: 2.9s; background: #FBBF24; }
+
+    @keyframes confettiFall {
+        0% {
+            top: -10%;
+            transform: rotate(0deg);
+        }
+        100% {
+            top: 110%;
+            transform: rotate(360deg);
+        }
+    }
+
+    /* whole dashboard subtle celebration mode */
+    .page.birthday-mode {
+        position: relative;
+    }
+
+    .page.birthday-mode::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 15% 20%, rgba(251, 191, 36, 0.06), transparent 22%),
+            radial-gradient(circle at 85% 25%, rgba(96, 165, 250, 0.05), transparent 24%),
+            radial-gradient(circle at 70% 80%, rgba(52, 211, 153, 0.05), transparent 26%);
+        animation: birthdayAmbient 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes birthdayAmbient {
+        from {
+            opacity: 0.45;
+        }
+        to {
+            opacity: 0.85;
+        }
+    }
     </style>
 </head>
 <body>
     $greeting_overlay_html
 
-    <div class="page">
+    <div class="page $birthday_mode_class">
         <div class="left">
             <div class="section">
                 <div class="section-title">Weather in our offices</div>
@@ -1326,6 +1395,7 @@ html = html_template.substitute(
     right_card_bg=theme["right_card_bg"],
     right_card_border=theme["right_card_border"],
     right_card_shadow=theme["right_card_shadow"],
+    birthday_mode_class=birthday_mode_class
 )
 
 components.html(html, height=860, scrolling=False)
