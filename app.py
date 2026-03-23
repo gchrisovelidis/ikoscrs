@@ -81,6 +81,45 @@ SPANISH_PROPERTIES = [
 
 DUETTO_LIVE_DATE = date(2026, 5, 5)
 
+BIRTHDAYS = [
+    ("Gourgoula", (9, 23)),
+    ("Mourmoura", (2, 20)),
+    ("Anna Z", (5, 23)),
+    ("Gkena", (3, 6)),
+    ("Theodora", (2, 20)),
+    ("Giota", (8, 4)),
+    ("Victoria", (1, 1)),
+    ("Xanthippi", (1, 1)),
+    ("Tonia", (9, 22)),
+    ("Katerina", (8, 16)),
+    ("Anna M", (6, 13)),
+    ("Chris", (7, 24)),
+    ("Foteini", (8, 26)),
+    ("Magda", (8, 27)),
+    ("Sotiri", (7, 7)),
+    ("Spyro", (11, 20)),
+    ("Maria Mpoutsou", (1, 1)),
+    ("Vicky", (12, 12)),
+    ("Chrysa", (3, 31)),
+    ("Anna G", (12, 7)),
+    ("Athina L", (1, 1)),
+    ("Eva", (3, 16)),
+    ("Iliana", (9, 19)),
+    ("Ivan", (5, 13)),
+    ("Elissavet", (11, 5)),
+    ("Olga Eleni", (7, 3)),
+    ("Gatidi", (7, 2)),
+    ("Nikoletta", (10, 28)),
+    ("Rafailia", (1, 18)),
+    ("Nefeli", (10, 11)),
+    ("Giorgo G", (1, 15)),
+    ("Gianni", (4, 15)),
+    ("Rena", (1, 24)),
+    ("Anna Ch", (3, 4)),
+    ("Christina", (6, 29)),
+    ("Evridiki", (9, 19)),
+]
+
 # -----------------------
 # Helpers
 # -----------------------
@@ -513,7 +552,28 @@ def get_flag_svg(country: str) -> str:
         </svg>
         """
     return ""
+def get_days_until_next_birthday(today_: date) -> int:
+    current_year = today_.year
+    next_dates = []
 
+    for _, (month, day) in BIRTHDAYS:
+        bday_this_year = date(current_year, month, day)
+
+        if bday_this_year >= today_:
+            next_dates.append(bday_this_year)
+        else:
+            next_dates.append(date(current_year + 1, month, day))
+
+    next_birthday = min(next_dates)
+    return (next_birthday - today_).days
+
+
+def get_today_birthdays(today_: date) -> list[str]:
+    names = []
+    for name, (month, day) in BIRTHDAYS:
+        if today_.month == month and today_.day == day:
+            names.append(name)
+    return names
 
 # -----------------------
 # Toggle + intro state
@@ -572,22 +632,30 @@ weekend_html = f"""
 # -----------------------
 # Right column cards
 # -----------------------
-duetto_days_remaining = (DUETTO_LIVE_DATE - today).days
+# -----------------------
+# Birthday cards
+# -----------------------
+days_to_next_bday = get_days_until_next_birthday(today)
 
-duetto_html = f"""
+birthday_countdown_html = f"""
 <div class="right-info-card">
-    <div class="section-title">Duetto goes live</div>
-    <div class="info-name alert-danger">5 May</div>
-    <div class="info-days alert-danger">{format_days_text(duetto_days_remaining)}</div>
+    <div class="section-title">Days until next birthday</div>
+    <div class="info-days alert-normal">{format_days_text(days_to_next_bday)}</div>
 </div>
 """
 
-ecommerce_html = """
-<div class="right-info-card">
-    <div class="section-title">E-commerce goes offline</div>
-    <div class="info-name alert-normal">Unknown</div>
-</div>
-"""
+today_birthdays = get_today_birthdays(today)
+
+birthday_today_html = ""
+if today_birthdays:
+    names = ", ".join(today_birthdays)
+
+    birthday_today_html = f"""
+    <div class="right-info-card">
+        <div class="section-title">🎉 Celebration</div>
+        <div class="info-name alert-weekend">🎉 Happy Birthday {names}!</div>
+    </div>
+    """
 
 # -----------------------
 # Logo
@@ -1177,8 +1245,8 @@ html = html_template.substitute(
     property_weather_html=property_weather_html,
     holiday_html=holiday_html,
     weekend_html=weekend_html,
-    duetto_html=duetto_html,
-    ecommerce_html=ecommerce_html,
+    duetto_html=birthday_countdown_html,
+    ecommerce_html=birthday_today_html,
     logo_html=logo_html,
     greek_properties_html=greek_properties_html,
     spanish_properties_html=spanish_properties_html,
