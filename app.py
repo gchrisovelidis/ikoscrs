@@ -707,7 +707,8 @@ weekend_html = f"""
 # Right column cards
 # -----------------------
 quote_info = fetch_quote_of_the_day(QUOTES_API_KEY)
-
+st.write("QUOTES_API_KEY exists:", bool(QUOTES_API_KEY))
+st.write("Quote info:", quote_info)
 quote_html = f"""
 <div class="right-info-card quote-card">
     <div class="section-title">Quote of the day</div>
