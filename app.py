@@ -38,6 +38,7 @@ LOGO_PATH = "logo.png"
 GREETING_FADE_SECONDS = 3
 
 API_KEY = st.secrets.get("API_KEY", "")
+QUOTES_API_KEY = st.secrets.get("QUOTES_API_KEY", "")
 
 OFFICE_LOCATIONS = {
     "Thessaloniki": "Thessaloniki,GR",
@@ -615,6 +616,39 @@ def get_today_birthdays(today_: date) -> list[str]:
             names.append(name)
     return names
 
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_quote_of_the_day(api_key: str) -> dict:
+    if not api_key:
+        return {
+            "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+            "author": "Winston Churchill",
+        }
+
+    url = "https://api.api-ninjas.com/v2/quoteoftheday"
+    headers = {
+        "X-Api-Key": api_key,
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return {
+                "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                "author": "Winston Churchill",
+            }
+
+        data = response.json()
+
+        return {
+            "quote": data.get("quote", "Success is not final, failure is not fatal: it is the courage to continue that counts."),
+            "author": data.get("author", "Winston Churchill"),
+        }
+    except Exception:
+        return {
+            "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+            "author": "Winston Churchill",
+        }
+
 # -----------------------
 # Toggle + intro state
 # -----------------------
@@ -672,6 +706,15 @@ weekend_html = f"""
 # -----------------------
 # Right column cards
 # -----------------------
+quote_info = fetch_quote_of_the_day(QUOTES_API_KEY)
+
+quote_html = f"""
+<div class="right-info-card quote-card">
+    <div class="section-title">Quote of the day</div>
+    <div class="quote-text">“{quote_info["quote"]}”</div>
+    <div class="quote-author">— {quote_info["author"]}</div>
+</div>
+"""
 # -----------------------
 # Birthday cards
 # -----------------------
@@ -735,6 +778,9 @@ spanish_flag_svg = get_flag_svg("es")
 # -----------------------
 # HTML
 # -----------------------
+birthday_section_divider = ""
+if birthday_today_html:
+    birthday_section_divider = '<div class="section-divider"></div>'
 html_template = Template(
     """
 <!DOCTYPE html>
@@ -1329,6 +1375,25 @@ html_template = Template(
             opacity: 0.85;
         }
     }
+    .quote-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .quote-text {
+        font-size: 18px;
+        line-height: 1.5;
+        font-style: italic;
+        font-weight: 500;
+        color: $text;
+    }
+
+    .quote-author {
+        font-size: 14px;
+        color: $muted;
+        font-weight: 600;
+    }
     </style>
 </head>
 <body>
@@ -1384,9 +1449,13 @@ html_template = Template(
         </div>
 
         <div class="right">
-            $duetto_html
+            $quote_html
 
             <div class="section-divider"></div>
+
+            $duetto_html
+
+            $birthday_section_divider
 
             $ecommerce_html
         </div>
@@ -1435,7 +1504,9 @@ html = html_template.substitute(
     right_card_bg=theme["right_card_bg"],
     right_card_border=theme["right_card_border"],
     right_card_shadow=theme["right_card_shadow"],
-    birthday_mode_class=birthday_mode_class
+    birthday_mode_class=birthday_mode_class,
+    quote_html=quote_html,
+    birthday_section_divider=birthday_section_divider,
 )
 
 components.html(html, height=860, scrolling=False)
