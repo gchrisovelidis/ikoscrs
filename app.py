@@ -616,38 +616,53 @@ def get_today_birthdays(today_: date) -> list[str]:
             names.append(name)
     return names
 
-@st.cache_data(ttl=86400, show_spinner=False)
+@st.cache_data(ttl=60, show_spinner=False)
 def fetch_quote_of_the_day(api_key: str) -> dict:
+    fallback = {
+        "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+        "author": "Winston Churchill",
+    }
+
     if not api_key:
-        return {
-            "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-            "author": "Winston Churchill",
-        }
+        return fallback
 
     url = "https://api.api-ninjas.com/v2/quoteoftheday"
-    headers = {
-        "X-Api-Key": api_key,
-    }
+    headers = {"X-Api-Key": api_key}
 
     try:
         response = requests.get(url, headers=headers, timeout=10)
+
+        # Temporary debug
+        print("QUOTE STATUS:", response.status_code)
+        print("QUOTE TEXT:", response.text)
+
         if response.status_code != 200:
-            return {
-                "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-                "author": "Winston Churchill",
-            }
+            return fallback
 
         data = response.json()
 
+        # Handle either dict or list just in case
+        if isinstance(data, list) and len(data) > 0:
+            item = data[0]
+        elif isinstance(data, dict):
+            item = data
+        else:
+            return fallback
+
+        quote = item.get("quote")
+        author = item.get("author")
+
+        if not quote or not author:
+            return fallback
+
         return {
-            "quote": data.get("quote", "Success is not final, failure is not fatal: it is the courage to continue that counts."),
-            "author": data.get("author", "Winston Churchill"),
+            "quote": quote,
+            "author": author,
         }
-    except Exception:
-        return {
-            "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-            "author": "Winston Churchill",
-        }
+
+    except Exception as e:
+        print("QUOTE ERROR:", e)
+        return fallback
 
 # -----------------------
 # Toggle + intro state
@@ -707,8 +722,6 @@ weekend_html = f"""
 # Right column cards
 # -----------------------
 quote_info = fetch_quote_of_the_day(QUOTES_API_KEY)
-st.write("QUOTES_API_KEY exists:", bool(QUOTES_API_KEY))
-st.write("Quote info:", quote_info)
 quote_html = f"""
 <div class="right-info-card quote-card">
     <div class="section-title">Quote of the day</div>
