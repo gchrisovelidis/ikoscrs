@@ -38,6 +38,7 @@ LOGO_PATH = "logo.png"
 GREETING_FADE_SECONDS = 3
 
 API_KEY = st.secrets.get("API_KEY", "")
+QUOTES_API_KEY = st.secrets.get("QUOTES_API_KEY", "")
 
 OFFICE_LOCATIONS = {
     "Thessaloniki": "Thessaloniki,GR",
@@ -472,12 +473,52 @@ def format_short_date(d: date) -> str:
     return d.strftime("%d %b %Y")
 
 
-def get_greeting_for_hour(hour: int) -> str:
-    if hour < 7:
-        return "Τι κάνεις εδώ τέτοια ώρα;"
-    if hour < 12:
-        return "Καλημέρα!"
-    return "Καλησπέρα!"
+def get_greeting(now: datetime) -> str:
+    hour = now.hour
+    weekday = now.weekday()  # Monday=0 ... Sunday=6
+
+    weekday_messages = [
+        ((0, 6), "Τι έγινε, έχουμε αϋπνίες?"),
+        ((6, 8), "Νωρίς σήμερα..."),
+        ((8, 12), "Καλημέρα!"),
+        ((12, 16), "Καλησπέρα!"),
+        ((16, 17), "Ετοίμαζε πράγματα σιγά σιγά..."),
+        ((17, 20), "Ακόμα εδώ???"),
+        ((20, 24), "Το έκαψες..."),
+    ]
+
+    saturday_messages = [
+        ((0, 6), "Σάββατο ξημερώματα και είσαι εδώ;"),
+        ((6, 8), "Σάββατο και τόσο νωρίς;"),
+        ((8, 12), "Καλημέρα... για Σάββατο πάντα"),
+        ((12, 16), "Σάββατο μεσημέρι, τι φάση;"),
+        ((16, 17), "Άντε, μάζευε πράγματα σιγά σιγά..."),
+        ((17, 20), "Σάββατο απόγευμα και ακόμα εδώ???"),
+        ((20, 24), "Οκ, το παράκανες σήμερα..."),
+    ]
+
+    sunday_messages = [
+        ((0, 6), "Κυριακή ξημερώματα... όλα καλά;"),
+        ((6, 8), "Κυριακή και ξύπνησες από τώρα;"),
+        ((8, 12), "Καλημέρα... όσο καλή μπορεί να είναι..."),
+        ((12, 16), "Κυριακή μεσημέρι, αύριο πάλι απ’ την αρχή"),
+        ((16, 17), "Σιγά σιγά τελειώνει το παραμύθι..."),
+        ((17, 20), "Κυριακή απόγευμα και ακόμα εδώ???"),
+        ((20, 24), "Αύριο δουλειά. Τα κεφάλια μέσα."),
+    ]
+
+    if weekday == 5:
+        messages = saturday_messages
+    elif weekday == 6:
+        messages = sunday_messages
+    else:
+        messages = weekday_messages
+
+    for (start_hour, end_hour), message in messages:
+        if start_hour <= hour < end_hour:
+            return message
+
+    return "Καλημέρα!"
 
 
 def get_property_progress(today_: date, opening: date, closing: date) -> tuple[int, str]:
@@ -575,6 +616,54 @@ def get_today_birthdays(today_: date) -> list[str]:
             names.append(name)
     return names
 
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_quote_of_the_day(api_key: str) -> dict:
+    fallback = {
+        "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+        "author": "Winston Churchill",
+    }
+
+    if not api_key:
+        return fallback
+
+    url = "https://api.api-ninjas.com/v2/quoteoftheday"
+    headers = {"X-Api-Key": api_key}
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+
+        # Temporary debug
+        print("QUOTE STATUS:", response.status_code)
+        print("QUOTE TEXT:", response.text)
+
+        if response.status_code != 200:
+            return fallback
+
+        data = response.json()
+
+        # Handle either dict or list just in case
+        if isinstance(data, list) and len(data) > 0:
+            item = data[0]
+        elif isinstance(data, dict):
+            item = data
+        else:
+            return fallback
+
+        quote = item.get("quote")
+        author = item.get("author")
+
+        if not quote or not author:
+            return fallback
+
+        return {
+            "quote": quote,
+            "author": author,
+        }
+
+    except Exception as e:
+        print("QUOTE ERROR:", e)
+        return fallback
+
 # -----------------------
 # Toggle + intro state
 # -----------------------
@@ -590,7 +679,7 @@ if "intro_shown" not in st.session_state:
 now = datetime.now(ZoneInfo(TIMEZONE))
 today = now.date()
 
-greeting = get_greeting_for_hour(now.hour)
+greeting = get_greeting(now)
 show_greeting = not st.session_state.intro_shown
 st.session_state.intro_shown = True
 
@@ -632,6 +721,14 @@ weekend_html = f"""
 # -----------------------
 # Right column cards
 # -----------------------
+quote_info = fetch_quote_of_the_day(QUOTES_API_KEY)
+quote_html = f"""
+<div class="right-info-card quote-card">
+    <div class="section-title">Quote of the day</div>
+    <div class="quote-text">“{quote_info["quote"]}”</div>
+    <div class="quote-author">— {quote_info["author"]}</div>
+</div>
+"""
 # -----------------------
 # Birthday cards
 # -----------------------
@@ -695,6 +792,9 @@ spanish_flag_svg = get_flag_svg("es")
 # -----------------------
 # HTML
 # -----------------------
+birthday_section_divider = ""
+if birthday_today_html:
+    birthday_section_divider = '<div class="section-divider"></div>'
 html_template = Template(
     """
 <!DOCTYPE html>
@@ -1289,6 +1389,25 @@ html_template = Template(
             opacity: 0.85;
         }
     }
+    .quote-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .quote-text {
+        font-size: 18px;
+        line-height: 1.5;
+        font-style: italic;
+        font-weight: 500;
+        color: $text;
+    }
+
+    .quote-author {
+        font-size: 14px;
+        color: $muted;
+        font-weight: 600;
+    }
     </style>
 </head>
 <body>
@@ -1344,9 +1463,13 @@ html_template = Template(
         </div>
 
         <div class="right">
-            $duetto_html
+            $quote_html
 
             <div class="section-divider"></div>
+
+            $duetto_html
+
+            $birthday_section_divider
 
             $ecommerce_html
         </div>
@@ -1395,7 +1518,9 @@ html = html_template.substitute(
     right_card_bg=theme["right_card_bg"],
     right_card_border=theme["right_card_border"],
     right_card_shadow=theme["right_card_shadow"],
-    birthday_mode_class=birthday_mode_class
+    birthday_mode_class=birthday_mode_class,
+    quote_html=quote_html,
+    birthday_section_divider=birthday_section_divider,
 )
 
 components.html(html, height=860, scrolling=False)
