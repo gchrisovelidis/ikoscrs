@@ -616,7 +616,7 @@ def get_today_birthdays(today_: date) -> list[str]:
             names.append(name)
     return names
 
-@st.cache_data(ttl=60, show_spinner=False)
+@st.cache_data(ttl=86400, show_spinner=False)
 def fetch_quote_of_the_day(api_key: str) -> dict:
     fallback = {
         "quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
