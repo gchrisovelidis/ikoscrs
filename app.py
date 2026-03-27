@@ -607,6 +607,9 @@ def render_property_cards(properties: list[dict], today_: date, occupancy_data: 
                 </div>
                 <div class="property-progress-text">{progress}%</div>
                 {occupancy_html}
+                <div class="occupancy-value occ-min">{format_percent_display(occ.get("min"))}</div>
+                <div class="occupancy-value occ-avg">{format_percent_display(occ.get("avg"))}</div>
+                <div class="occupancy-value occ-max">{format_percent_display(occ.get("max"))}</div>
             </div>
             """
         )
