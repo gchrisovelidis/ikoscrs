@@ -1059,7 +1059,8 @@ html_template = Template(
             flex-direction: column;
             justify-content: flex-start;
             height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .middle {
