@@ -1692,7 +1692,6 @@ html_template = Template(
 
         <div class="middle">
             <div class="middle-content">
-                $logo_html
 
                 <div class="properties-group">
                     <div class="properties-group-header">
