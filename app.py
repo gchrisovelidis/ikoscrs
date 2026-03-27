@@ -1,5 +1,8 @@
 import base64
+import json
+import re
 from datetime import date, datetime
+from io import BytesIO
 from pathlib import Path
 from string import Template
 from zoneinfo import ZoneInfo
@@ -7,6 +10,7 @@ from zoneinfo import ZoneInfo
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
+from openpyxl import load_workbook
 
 
 st.set_page_config(
@@ -81,6 +85,51 @@ SPANISH_PROPERTIES = [
 ]
 
 DUETTO_LIVE_DATE = date(2026, 5, 5)
+ADMIN_KEY = st.secrets.get("ADMIN_KEY", "")
+OCCUPANCY_SNAPSHOT_PATH = "occupancy_snapshot.json"
+
+OCCUPANCY_TAB_CONFIG = {
+    "IOC": {
+        "property_name": "Ikos Oceania",
+        "range": "Q7:Q226",
+        "avg_cell": "Q227",
+    },
+    "IOL": {
+        "property_name": "Ikos Olivia",
+        "range": "V6:V218",
+        "avg_cell": "V220",
+    },
+    "IDA": {
+        "property_name": "Ikos Dassia",
+        "range": "X6:X218",
+        "avg_cell": "X219",
+    },
+    "IOD": {
+        "property_name": "Ikos Odisia",
+        "range": "AA6:AA197",
+        "avg_cell": "AA198",
+    },
+    "IAR": {
+        "property_name": "Ikos Aria",
+        "range": "S6:S197",
+        "avg_cell": "S198",
+    },
+    "IKI": {
+        "property_name": "Ikos Kissamos",
+        "range": "AC6:AC190",
+        "avg_cell": "AC191",
+    },
+    "IAN": {
+        "property_name": "Ikos Andalusia",
+        "range": "AD6:AD232",
+        "avg_cell": "AD240",
+    },
+    "IPP": {
+        "property_name": "Ikos Porto Petro",
+        "range": "Y6:Y217",
+        "avg_cell": "Y218",
+    },
+}
 
 raw_birthdays = st.secrets.get("BIRTHDAYS", [])
 
@@ -505,8 +554,9 @@ def get_property_progress(today_: date, opening: date, closing: date) -> tuple[i
     return progress, "In season"
 
 
-def render_property_cards(properties: list[dict], today_: date) -> str:
+def render_property_cards(properties: list[dict], today_: date, occupancy_data: dict | None = None) -> str:
     cards = []
+    occupancy_data = occupancy_data or {}
 
     for prop in properties:
         progress, status = get_property_progress(today_, prop["opening"], prop["closing"])
@@ -517,6 +567,30 @@ def render_property_cards(properties: list[dict], today_: date) -> str:
             status_class = "property-status-done"
         else:
             status_class = "property-status-live"
+
+        occ = occupancy_data.get(prop["name"], {})
+        occupancy_html = ""
+
+        if occ:
+            occupancy_html = f"""
+                <div class="occupancy-box">
+                    <div class="occupancy-title">Occupancy</div>
+                    <div class="occupancy-grid">
+                        <div class="occupancy-item">
+                            <div class="occupancy-label">Min</div>
+                            <div class="occupancy-value">{format_percent_display(occ.get("min"))}</div>
+                        </div>
+                        <div class="occupancy-item">
+                            <div class="occupancy-label">Avg</div>
+                            <div class="occupancy-value">{format_percent_display(occ.get("avg"))}</div>
+                        </div>
+                        <div class="occupancy-item">
+                            <div class="occupancy-label">Max</div>
+                            <div class="occupancy-value">{format_percent_display(occ.get("max"))}</div>
+                        </div>
+                    </div>
+                </div>
+            """
 
         cards.append(
             f"""
@@ -532,6 +606,7 @@ def render_property_cards(properties: list[dict], today_: date) -> str:
                     <div class="property-progress-fill" style="width:{progress}%"></div>
                 </div>
                 <div class="property-progress-text">{progress}%</div>
+                {occupancy_html}
             </div>
             """
         )
@@ -632,11 +707,153 @@ def fetch_quote_of_the_day(api_key: str) -> dict:
         print("QUOTE ERROR:", e)
         return fallback
 
+def is_admin_mode() -> bool:
+    if not ADMIN_KEY:
+        return False
+    return st.query_params.get("admin") == ADMIN_KEY
+
+
+def normalize_percent_value(value):
+    if value is None or value == "":
+        return None
+
+    if isinstance(value, str):
+        raw = value.strip().replace("%", "").replace(",", ".")
+        if not raw:
+            return None
+        try:
+            num = float(raw)
+        except ValueError:
+            return None
+        return num
+
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    # Excel percentage cells often come as 0.4083 for 40.83%
+    if 0 <= num <= 1:
+        return num * 100
+
+    return num
+
+
+def extract_range_values(ws, cell_range: str) -> list[float]:
+    values = []
+    for row in ws[cell_range]:
+        for cell in row:
+            val = normalize_percent_value(cell.value)
+            if val is not None:
+                values.append(val)
+    return values
+
+
+def parse_sheet_date(sheet_name: str, prefix: str):
+    pattern = rf"^{prefix}\s+(\d{{2}}\.\d{{2}}\.\d{{4}})$"
+    match = re.match(pattern, sheet_name.strip())
+    if not match:
+        return None
+    try:
+        return datetime.strptime(match.group(1), "%d.%m.%Y").date()
+    except ValueError:
+        return None
+
+
+def find_latest_sheet_for_prefix(workbook, prefix: str):
+    candidates = []
+
+    for sheet_name in workbook.sheetnames:
+        parsed_date = parse_sheet_date(sheet_name, prefix)
+        if parsed_date is not None:
+            candidates.append((parsed_date, sheet_name))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1]
+
+
+def extract_occupancy_snapshot_from_excel(file_bytes: bytes) -> dict:
+    wb = load_workbook(filename=BytesIO(file_bytes), data_only=True)
+    snapshot = {}
+
+    for prefix, cfg in OCCUPANCY_TAB_CONFIG.items():
+        sheet_name = find_latest_sheet_for_prefix(wb, prefix)
+        if not sheet_name:
+            continue
+
+        ws = wb[sheet_name]
+        range_values = extract_range_values(ws, cfg["range"])
+        avg_value = normalize_percent_value(ws[cfg["avg_cell"]].value)
+
+        if not range_values and avg_value is None:
+            continue
+
+        snapshot[cfg["property_name"]] = {
+            "min": round(min(range_values), 2) if range_values else None,
+            "max": round(max(range_values), 2) if range_values else None,
+            "avg": round(avg_value, 2) if avg_value is not None else None,
+            "sheet": sheet_name,
+        }
+
+    return snapshot
+
+
+def save_occupancy_snapshot(snapshot: dict) -> None:
+    payload = {
+        "updated_at": datetime.now(ZoneInfo(TIMEZONE)).isoformat(),
+        "data": snapshot,
+    }
+    Path(OCCUPANCY_SNAPSHOT_PATH).write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+
+def load_occupancy_snapshot() -> dict:
+    p = Path(OCCUPANCY_SNAPSHOT_PATH)
+    if not p.exists():
+        return {}
+
+    try:
+        payload = json.loads(p.read_text(encoding="utf-8"))
+        return payload.get("data", {})
+    except Exception:
+        return {}
+
+
+def format_percent_display(value) -> str:
+    if value is None:
+        return "—"
+    return f"{value:.2f}%"
+
 # -----------------------
 # Toggle + intro state
 # -----------------------
 dark_mode = st.toggle("🌙 Dark mode", value=False)
 theme = get_theme_colors(dark_mode)
+
+is_admin = is_admin_mode()
+
+if is_admin:
+    with st.sidebar:
+        st.markdown("### Admin")
+        uploaded_occupancy_file = st.file_uploader(
+            "Upload latest occupancy Excel",
+            type=["xlsx", "xlsm"],
+            key="occupancy_uploader",
+        )
+
+        if uploaded_occupancy_file is not None:
+            try:
+                file_bytes = uploaded_occupancy_file.read()
+                occupancy_snapshot = extract_occupancy_snapshot_from_excel(file_bytes)
+                save_occupancy_snapshot(occupancy_snapshot)
+                st.success("Occupancy snapshot updated.")
+            except Exception as e:
+                st.error(f"Could not process the file: {e}")
 
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
@@ -751,8 +968,10 @@ property_weather_html = render_weather_rows(PROPERTY_LOCATIONS, office=False)
 # -----------------------
 # Middle column HTML
 # -----------------------
-greek_properties_html = render_property_cards(GREEK_PROPERTIES, today)
-spanish_properties_html = render_property_cards(SPANISH_PROPERTIES, today)
+occupancy_data = load_occupancy_snapshot()
+
+greek_properties_html = render_property_cards(GREEK_PROPERTIES, today, occupancy_data)
+spanish_properties_html = render_property_cards(SPANISH_PROPERTIES, today, occupancy_data)
 
 greek_flag_svg = get_flag_svg("gr")
 spanish_flag_svg = get_flag_svg("es")
@@ -1375,6 +1594,47 @@ html_template = Template(
         font-size: 14px;
         color: $muted;
         font-weight: 600;
+    }
+    .occupancy-box {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid $divider;
+    }
+
+    .occupancy-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: $section_title;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 8px;
+    }
+
+    .occupancy-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .occupancy-item {
+        background: rgba(127, 127, 127, 0.06);
+        border-radius: 10px;
+        padding: 8px 6px;
+        text-align: center;
+    }
+
+    .occupancy-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: $card_subtle;
+        margin-bottom: 4px;
+    }
+
+    .occupancy-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: $text;
+        line-height: 1.2;
     }
     </style>
 </head>

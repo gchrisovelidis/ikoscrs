@@ -82,43 +82,11 @@ SPANISH_PROPERTIES = [
 
 DUETTO_LIVE_DATE = date(2026, 5, 5)
 
+raw_birthdays = st.secrets.get("BIRTHDAYS", [])
+
 BIRTHDAYS = [
-    ("Gourgoula", (9, 23)),
-    ("Mourmoura", (2, 20)),
-    ("Anna Z", (5, 23)),
-    ("Gkena", (3, 6)),
-    ("Theodora", (2, 20)),
-    ("Giota", (8, 4)),
-    ("Victoria", (2, 11)),
-    ("Xanthippi", (8, 9)),
-    ("Tonia", (9, 22)),
-    ("Katerina", (8, 16)),
-    ("Anna M", (6, 13)),
-    ("Chris", (7, 24)),
-    ("Foteini", (8, 26)),
-    ("Magda", (8, 27)),
-    ("Sotiri", (7, 7)),
-    ("Spyro", (11, 20)),
-    ("Maria", (1, 1)),
-    ("Vicky", (12, 9)),
-    ("Chrysa", (3, 31)),
-    ("Anna G", (12, 7)),
-    ("Athina L", (1, 13)),
-    ("Eva", (3, 16)),
-    ("Iliana", (9, 19)),
-    ("Ivan", (5, 13)),
-    ("Elissavet", (11, 5)),
-    ("Olga Eleni", (7, 3)),
-    ("Gatidi", (7, 2)),
-    ("Nikoletta", (10, 28)),
-    ("Rafailia", (1, 18)),
-    ("Nefeli", (10, 11)),
-    ("Giorgo M", (1, 15)),
-    ("Gianni", (4, 15)),
-    ("Rena", (1, 24)),
-    ("Anna Ch", (3, 4)),
-    ("Christina", (6, 29)),
-    ("Evridiki", (9, 19)),
+    (b["name"], (b["month"], b["day"]))
+    for b in raw_birthdays
 ]
 
 # -----------------------
