@@ -836,11 +836,11 @@ dark_mode = st.toggle("🌙 Dark mode", value=False)
 theme = get_theme_colors(dark_mode)
 
 is_admin = is_admin_mode()
-st.write("Admin mode:", is_admin)
+
+is_admin = is_admin_mode()
 
 if is_admin:
-    with st.sidebar:
-        st.markdown("### Admin")
+    with st.expander("Admin upload", expanded=True):
         uploaded_occupancy_file = st.file_uploader(
             "Upload latest occupancy Excel",
             type=["xlsx", "xlsm"],
