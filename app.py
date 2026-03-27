@@ -38,23 +38,25 @@ st.markdown(
 # Config
 # -----------------------
 TIMEZONE = "Europe/Athens"
-LOGO_PATH = "logo.png"
-GREETING_FADE_SECONDS = 3
+LIGHT_LOGO_PATH = "ikos_logo.png"
+DARK_LOGO_PATH = "ikos_logo_white.png"
+GREETING_FADE_SECONDS = 4
 
 API_KEY = st.secrets.get("API_KEY", "")
 QUOTES_API_KEY = st.secrets.get("QUOTES_API_KEY", "")
 
 OFFICE_LOCATIONS = {
-    "Thessaloniki": "Thessaloniki,GR",
+    "Thessaloniki": {"lat": 40.566848672247765, "lon": 22.986678738493765},
 }
 
 PROPERTY_LOCATIONS = {
-    "Halkidiki": "Polygyros,GR",
-    "Corfu": "Kerkyra,GR",
-    "Kos": "Kos, South Aegean, Greece",
-    "Crete": "Heraklion,GR",
-    "Marbella": "Marbella,ES",
-    "Mallorca": "Palma,ES",
+    "Gerakini": {"lat": 40.26784280039634, "lon": 23.452217069161044}
+    "Moudania": {"lat": 40.24593052075884, "lon": 23.267776250121464}
+    "Dassia": {"lat": 39.68037027085432, "lon": 19.840290098359727},
+    "Kos": {"lat": 36.755747838991425, "lon": 26.98890205802482},
+    "Kissamos": {"lat": 35.497267099361686, "lon": 23.675095324735025},
+    "Marbella-Estepona": {"lat": 36.45298583647883, "lon": -5.060388300356268},
+    "Mallorca": {"lat": 39.359151379519126, "lon": 3.210255509592434},
 }
 
 BANK_HOLIDAYS = [
@@ -298,21 +300,22 @@ def get_weather_condition_class(weather: str) -> str:
 
 
 @st.cache_data(ttl=600, show_spinner=False)
-def fetch_weather(query: str, api_key: str) -> dict:
+def fetch_weather(location: dict, api_key: str) -> dict:
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {
-        "q": query,
         "appid": api_key,
         "units": "metric",
+        "lat": location["lat"],
+        "lon": location["lon"],
     }
+
     response = requests.get(url, params=params, timeout=10)
     return {
         "status_code": response.status_code,
         "json": response.json(),
     }
 
-
-def get_weather_for_city(query: str) -> dict:
+def get_weather_for_city(location: dict) -> dict:
     if not API_KEY:
         return {
             "temp": "—",
@@ -324,7 +327,7 @@ def get_weather_for_city(query: str) -> dict:
         }
 
     try:
-        result = fetch_weather(query, API_KEY)
+        result = fetch_weather(location, API_KEY)
         status_code = result["status_code"]
         data = result["json"]
 
@@ -952,7 +955,9 @@ if today_birthdays:
 # Logo
 # -----------------------
 logo_html = ""
-logo_b64 = get_logo_base64(LOGO_PATH)
+current_logo_path = DARK_LOGO_PATH if dark_mode else LIGHT_LOGO_PATH
+logo_b64 = get_logo_base64(current_logo_path)
+
 if logo_b64:
     logo_html = f"""
         <div class="logo">
@@ -1094,8 +1099,8 @@ html_template = Template(
         }
 
         .logo img {
-            width: 210px;
-            max-width: 60vw;
+            width: 220px;
+            max-width: 70%;
             height: auto;
             pointer-events: none;
             user-select: none;
@@ -1663,6 +1668,7 @@ html_template = Template(
 
     <div class="page $birthday_mode_class">
         <div class="left">
+            $logo_html
             <div class="section">
                 <div class="section-title">Weather in our offices</div>
                 $office_weather_html
