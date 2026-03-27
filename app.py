@@ -578,15 +578,15 @@ def render_property_cards(properties: list[dict], today_: date, occupancy_data: 
                     <div class="occupancy-grid">
                         <div class="occupancy-item">
                             <div class="occupancy-label">Min</div>
-                            <div class="occupancy-value">{format_percent_display(occ.get("min"))}</div>
+                            <div class="occupancy-value occ-min">{format_percent_display(occ.get("min"))}</div>
                         </div>
                         <div class="occupancy-item">
                             <div class="occupancy-label">Avg</div>
-                            <div class="occupancy-value">{format_percent_display(occ.get("avg"))}</div>
+                            <div class="occupancy-value occ-avg">{format_percent_display(occ.get("avg"))}</div>
                         </div>
                         <div class="occupancy-item">
                             <div class="occupancy-label">Max</div>
-                            <div class="occupancy-value">{format_percent_display(occ.get("max"))}</div>
+                            <div class="occupancy-value occ-max">{format_percent_display(occ.get("max"))}</div>
                         </div>
                     </div>
                 </div>
@@ -607,9 +607,6 @@ def render_property_cards(properties: list[dict], today_: date, occupancy_data: 
                 </div>
                 <div class="property-progress-text">{progress}%</div>
                 {occupancy_html}
-                <div class="occupancy-value occ-min">{format_percent_display(occ.get("min"))}</div>
-                <div class="occupancy-value occ-avg">{format_percent_display(occ.get("avg"))}</div>
-                <div class="occupancy-value occ-max">{format_percent_display(occ.get("max"))}</div>
             </div>
             """
         )
@@ -1648,6 +1645,7 @@ html_template = Template(
 
     .occ-avg {
         color: $text; /* neutral */
+        font-weight: 700;
     }
 
     .occ-max {
