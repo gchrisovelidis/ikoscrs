@@ -836,6 +836,7 @@ dark_mode = st.toggle("🌙 Dark mode", value=False)
 theme = get_theme_colors(dark_mode)
 
 is_admin = is_admin_mode()
+st.write("Admin mode:", is_admin)
 
 if is_admin:
     with st.sidebar:
