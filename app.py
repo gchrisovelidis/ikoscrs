@@ -1640,6 +1640,24 @@ html_template = Template(
         color: $text;
         line-height: 1.2;
     }
+    /* Occupancy colors */
+    .occ-min {
+        color: #FB7185; /* red */
+        font-weight: 800;
+    }
+
+    .occ-avg {
+        color: $text; /* neutral */
+    }
+
+    .occ-max {
+        color: #34D399; /* green */
+        font-weight: 800;
+    }
+    .occ-avg {
+        color: $text;
+        font-weight: 700;
+    }
     </style>
 </head>
 <body>
