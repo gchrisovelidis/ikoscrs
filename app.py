@@ -639,6 +639,7 @@ def get_flag_svg(country: str) -> str:
         </svg>
         """
     return ""
+
 def get_days_until_next_birthday(today_: date) -> int | None:
     if not BIRTHDAYS:
         return None
@@ -649,7 +650,7 @@ def get_days_until_next_birthday(today_: date) -> int | None:
     for _, (month, day) in BIRTHDAYS:
         bday_this_year = date(current_year, month, day)
 
-        # Skip birthdays that are today
+        # Exclude birthdays that are today
         if bday_this_year > today_:
             next_dates.append(bday_this_year)
         else:
@@ -841,28 +842,34 @@ def format_percent_display(value) -> str:
 # -----------------------
 dark_mode = st.toggle("🌙 Dark mode", value=False)
 theme = get_theme_colors(dark_mode)
-toggle_css = """
-<style>
-/* Dark mode toggle styling */
-div[data-testid="stToggle"] label {
-    color: %s !important;
-}
+st.markdown(
+    f"""
+    <style>
+    /* Toggle label */
+    div[data-testid="stToggle"] label p {{
+        color: {"#EAF1FF" if dark_mode else "#2F3345"} !important;
+        font-weight: 600 !important;
+    }}
 
-/* toggle track */
-div[data-testid="stToggle"] [data-baseweb="switch"] > div {
-    background-color: %s !important;
-}
+    /* Toggle track - default/off */
+    div[data-testid="stToggle"] div[role="switch"] {{
+        background-color: {"#334155" if dark_mode else "#E5E7EB"} !important;
+        border: 1px solid {"#475569" if dark_mode else "#CBD5E1"} !important;
+    }}
 
-/* toggle knob */
-div[data-testid="stToggle"] [data-baseweb="switch"] input:checked + div,
-div[data-testid="stToggle"] [data-baseweb="switch"] div[aria-checked="true"] {
-    background-color: %s !important;
-}
-</style>
-""" % (
-    "#EAF1FF" if dark_mode else "#2F3345",
-    "#334155" if dark_mode else "#E5E7EB",
-    "#3B82F6" if dark_mode else "#1F5FAE",
+    /* Toggle track - ON state */
+    div[data-testid="stToggle"] div[role="switch"][aria-checked="true"] {{
+        background-color: {"#1D4ED8" if dark_mode else "#1F5FAE"} !important;
+        border: 1px solid {"#3B82F6" if dark_mode else "#1F5FAE"} !important;
+    }}
+
+    /* Toggle knob */
+    div[data-testid="stToggle"] div[role="switch"] > div {{
+        background-color: #FFFFFF !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 st.markdown(toggle_css, unsafe_allow_html=True)
@@ -951,7 +958,6 @@ quote_html = f"""
 # Birthday cards
 # -----------------------
 days_to_next_bday = get_days_until_next_birthday(today)
-
 birthday_countdown_value = "—" if days_to_next_bday is None else format_days_text(days_to_next_bday)
 
 birthday_countdown_html = f"""
@@ -1079,6 +1085,7 @@ html_template = Template(
             animation: fadeInOut ${greeting_seconds}s ease-in-out forwards;
             transform-origin: center center;
             padding: 0 30px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
         }
 
         .left {
