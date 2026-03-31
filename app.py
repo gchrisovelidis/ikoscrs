@@ -852,37 +852,25 @@ theme = get_theme_colors(dark_mode)
 st.markdown(
     f"""
     <style>
-    /* Whole Streamlit page background */
     .stApp {{
         background-color: {theme["bg"]} !important;
     }}
 
-    [data-testid="stAppViewContainer"] {{
-        background: {theme["bg"]} !important;
-    }}
-
-    [data-testid="stHeader"] {{
-        background: {theme["bg"]} !important;
-    }}
-
-    [data-testid="stMain"] {{
-        background: {theme["bg"]} !important;
-    }}
-
+    [data-testid="stAppViewContainer"],
+    [data-testid="stHeader"],
+    [data-testid="stMain"],
     .main .block-container {{
         background: {theme["bg"]} !important;
         padding-top: 0.75rem !important;
         padding-bottom: 0 !important;
     }}
 
-    /* Toggle row / wrapper */
     div[data-testid="stToggle"] {{
         background: {theme["bg"]} !important;
         padding-left: 0.25rem;
         margin-bottom: 0.5rem;
     }}
 
-    /* Toggle label + icon */
     div[data-testid="stToggle"] label,
     div[data-testid="stToggle"] label p,
     div[data-testid="stToggle"] svg {{
@@ -890,27 +878,6 @@ st.markdown(
         fill: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
     }}
 
-    /* Actual switch */
-    div[data-testid="stToggle"] button[role="switch"] {{
-        background: {"#334155" if dark_mode else "#E5E7EB"} !important;
-        border: 1px solid {"#475569" if dark_mode else "#CBD5E1"} !important;
-        box-shadow: none !important;
-    }}
-
-    div[data-testid="stToggle"] button[role="switch"][aria-checked="true"] {{
-        background: {"#1D4ED8" if dark_mode else "#1F5FAE"} !important;
-        border: 1px solid {"#3B82F6" if dark_mode else "#1F5FAE"} !important;
-    }}
-
-    div[data-testid="stToggle"] button[role="switch"] > div {{
-        background: #FFFFFF !important;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-    /* Actual switch */
     div[data-testid="stToggle"] button[role="switch"] {{
         background: {"#334155" if dark_mode else "#E5E7EB"} !important;
         border: 1px solid {"#475569" if dark_mode else "#CBD5E1"} !important;
