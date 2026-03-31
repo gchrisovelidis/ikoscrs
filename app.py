@@ -639,14 +639,18 @@ def get_flag_svg(country: str) -> str:
         </svg>
         """
     return ""
-def get_days_until_next_birthday(today_: date) -> int:
+def get_days_until_next_birthday(today_: date) -> int | None:
+    if not BIRTHDAYS:
+        return None
+
     current_year = today_.year
     next_dates = []
 
     for _, (month, day) in BIRTHDAYS:
         bday_this_year = date(current_year, month, day)
 
-        if bday_this_year >= today_:
+        # Skip birthdays that are today
+        if bday_this_year > today_:
             next_dates.append(bday_this_year)
         else:
             next_dates.append(date(current_year + 1, month, day))
@@ -837,6 +841,31 @@ def format_percent_display(value) -> str:
 # -----------------------
 dark_mode = st.toggle("🌙 Dark mode", value=False)
 theme = get_theme_colors(dark_mode)
+toggle_css = """
+<style>
+/* Dark mode toggle styling */
+div[data-testid="stToggle"] label {
+    color: %s !important;
+}
+
+/* toggle track */
+div[data-testid="stToggle"] [data-baseweb="switch"] > div {
+    background-color: %s !important;
+}
+
+/* toggle knob */
+div[data-testid="stToggle"] [data-baseweb="switch"] input:checked + div,
+div[data-testid="stToggle"] [data-baseweb="switch"] div[aria-checked="true"] {
+    background-color: %s !important;
+}
+</style>
+""" % (
+    "#EAF1FF" if dark_mode else "#2F3345",
+    "#334155" if dark_mode else "#E5E7EB",
+    "#3B82F6" if dark_mode else "#1F5FAE",
+)
+
+st.markdown(toggle_css, unsafe_allow_html=True)
 
 is_admin = is_admin_mode()
 
@@ -923,10 +952,12 @@ quote_html = f"""
 # -----------------------
 days_to_next_bday = get_days_until_next_birthday(today)
 
+birthday_countdown_value = "—" if days_to_next_bday is None else format_days_text(days_to_next_bday)
+
 birthday_countdown_html = f"""
 <div class="right-info-card">
     <div class="section-title">Days until next birthday</div>
-    <div class="info-days alert-normal">{format_days_text(days_to_next_bday)}</div>
+    <div class="info-days alert-normal">{birthday_countdown_value}</div>
 </div>
 """
 
@@ -1042,7 +1073,7 @@ html_template = Template(
             font-size: 112px;
             font-weight: 800;
             line-height: 1;
-            color: #111111;
+            color: $text;
             text-align: center;
             opacity: 0;
             animation: fadeInOut ${greeting_seconds}s ease-in-out forwards;
