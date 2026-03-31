@@ -852,43 +852,60 @@ theme = get_theme_colors(dark_mode)
 st.markdown(
     f"""
     <style>
-    .stApp {{
-        background-color: {theme["bg"]} !important;
-    }}
-
+    .stApp,
     [data-testid="stAppViewContainer"],
     [data-testid="stHeader"],
     [data-testid="stMain"],
+    .main,
     .main .block-container {{
         background: {theme["bg"]} !important;
+    }}
+
+    .main .block-container {{
         padding-top: 0.75rem !important;
         padding-bottom: 0 !important;
     }}
 
+    /* Toggle container */
     div[data-testid="stToggle"] {{
         background: {theme["bg"]} !important;
-        padding-left: 0.25rem;
-        margin-bottom: 0.5rem;
-    }}
-
-    div[data-testid="stToggle"] label,
-    div[data-testid="stToggle"] label p,
-    div[data-testid="stToggle"] svg {{
         color: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
-        fill: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
+        margin-bottom: 0.5rem;
+        padding-left: 0.25rem;
     }}
 
+    /* Everything inside the toggle label area */
+    div[data-testid="stToggle"] *,
+    div[data-testid="stToggle"] label,
+    div[data-testid="stToggle"] label *,
+    div[data-testid="stToggle"] p,
+    div[data-testid="stToggle"] span,
+    div[data-testid="stToggle"] div {{
+        color: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
+    }}
+
+    /* SVG icon */
+    div[data-testid="stToggle"] svg,
+    div[data-testid="stToggle"] svg * {{
+        fill: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
+        stroke: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
+    }}
+
+    /* Switch track */
     div[data-testid="stToggle"] button[role="switch"] {{
         background: {"#64748B" if dark_mode else "#E5E7EB"} !important;
         border: 1px solid {"#94A3B8" if dark_mode else "#CBD5E1"} !important;
         box-shadow: none !important;
+        opacity: 1 !important;
     }}
 
+    /* Switch track when ON */
     div[data-testid="stToggle"] button[role="switch"][aria-checked="true"] {{
         background: {"#3B82F6" if dark_mode else "#1F5FAE"} !important;
         border: 1px solid {"#60A5FA" if dark_mode else "#1F5FAE"} !important;
     }}
 
+    /* White knob */
     div[data-testid="stToggle"] button[role="switch"] > div {{
         background: #FFFFFF !important;
     }}
