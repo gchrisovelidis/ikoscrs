@@ -840,32 +840,41 @@ def format_percent_display(value) -> str:
 # -----------------------
 # Toggle + intro state
 # -----------------------
-dark_mode = st.toggle("🌙 Dark mode", value=False)
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+if "last_dark_mode" not in st.session_state:
+    st.session_state.last_dark_mode = st.session_state.dark_mode
+
+dark_mode = st.toggle("🌙 Dark mode", key="dark_mode")
 theme = get_theme_colors(dark_mode)
+
 st.markdown(
     f"""
     <style>
-    /* Toggle label */
     div[data-testid="stToggle"] label p {{
         color: {"#EAF1FF" if dark_mode else "#2F3345"} !important;
         font-weight: 600 !important;
     }}
 
-    /* Toggle track - default/off */
-    div[data-testid="stToggle"] div[role="switch"] {{
-        background-color: {"#334155" if dark_mode else "#E5E7EB"} !important;
+    div[data-testid="stToggle"] button[role="switch"] {{
+        background: {"#334155" if dark_mode else "#E5E7EB"} !important;
         border: 1px solid {"#475569" if dark_mode else "#CBD5E1"} !important;
+        box-shadow: none !important;
     }}
 
-    /* Toggle track - ON state */
-    div[data-testid="stToggle"] div[role="switch"][aria-checked="true"] {{
-        background-color: {"#1D4ED8" if dark_mode else "#1F5FAE"} !important;
+    div[data-testid="stToggle"] button[role="switch"][aria-checked="true"] {{
+        background: {"#1D4ED8" if dark_mode else "#1F5FAE"} !important;
         border: 1px solid {"#3B82F6" if dark_mode else "#1F5FAE"} !important;
     }}
 
-    /* Toggle knob */
-    div[data-testid="stToggle"] div[role="switch"] > div {{
-        background-color: #FFFFFF !important;
+    div[data-testid="stToggle"] button[role="switch"] > div {{
+        background: #FFFFFF !important;
+    }}
+
+    div[data-testid="stToggle"] button[role="switch"]::before,
+    div[data-testid="stToggle"] button[role="switch"]::after {{
+        background: transparent !important;
     }}
     </style>
     """,
@@ -902,8 +911,12 @@ now = datetime.now(ZoneInfo(TIMEZONE))
 today = now.date()
 
 greeting = get_greeting(now)
-show_greeting = not st.session_state.intro_shown
+
+theme_changed = st.session_state.last_dark_mode != dark_mode
+show_greeting = (not st.session_state.intro_shown) or theme_changed
+
 st.session_state.intro_shown = True
+st.session_state.last_dark_mode = dark_mode
 
 greeting_overlay_html = ""
 if show_greeting:
