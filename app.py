@@ -879,14 +879,14 @@ st.markdown(
     }}
 
     div[data-testid="stToggle"] button[role="switch"] {{
-        background: {"#334155" if dark_mode else "#E5E7EB"} !important;
-        border: 1px solid {"#475569" if dark_mode else "#CBD5E1"} !important;
+        background: {"#64748B" if dark_mode else "#E5E7EB"} !important;
+        border: 1px solid {"#94A3B8" if dark_mode else "#CBD5E1"} !important;
         box-shadow: none !important;
     }}
 
     div[data-testid="stToggle"] button[role="switch"][aria-checked="true"] {{
-        background: {"#1D4ED8" if dark_mode else "#1F5FAE"} !important;
-        border: 1px solid {"#3B82F6" if dark_mode else "#1F5FAE"} !important;
+        background: {"#3B82F6" if dark_mode else "#1F5FAE"} !important;
+        border: 1px solid {"#60A5FA" if dark_mode else "#1F5FAE"} !important;
     }}
 
     div[data-testid="stToggle"] button[role="switch"] > div {{
