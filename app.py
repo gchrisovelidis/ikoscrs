@@ -872,9 +872,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown(toggle_css, unsafe_allow_html=True)
-
-is_admin = is_admin_mode()
 
 is_admin = is_admin_mode()
 
