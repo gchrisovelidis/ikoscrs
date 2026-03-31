@@ -883,40 +883,6 @@ st.markdown(
     }}
 
     /* Toggle label + icon */
-st.markdown(
-    f"""
-    <style>
-    /* Whole Streamlit page background */
-    .stApp {{
-        background-color: {theme["bg"]} !important;
-    }}
-
-    [data-testid="stAppViewContainer"] {{
-        background: {theme["bg"]} !important;
-    }}
-
-    [data-testid="stHeader"] {{
-        background: {theme["bg"]} !important;
-    }}
-
-    [data-testid="stMain"] {{
-        background: {theme["bg"]} !important;
-    }}
-
-    .main .block-container {{
-        background: {theme["bg"]} !important;
-        padding-top: 0.75rem !important;
-        padding-bottom: 0 !important;
-    }}
-
-    /* Toggle row / wrapper */
-    div[data-testid="stToggle"] {{
-        background: {theme["bg"]} !important;
-        padding-left: 0.25rem;
-        margin-bottom: 0.5rem;
-    }}
-
-    /* Toggle label + icon */
     div[data-testid="stToggle"] label,
     div[data-testid="stToggle"] label p,
     div[data-testid="stToggle"] svg {{
