@@ -882,14 +882,13 @@ st.markdown(
         margin-bottom: 0.5rem;
     }}
 
-    div[data-testid="stToggle"] label {{
-        color: {theme["text"]} !important;
-    }}
-
-    div[data-testid="stToggle"] label p {{
-        color: {theme["text"]} !important;
-        font-weight: 600 !important;
-    }}
+    /* Toggle label + icon */
+    div[data-testid="stToggle"] label,
+    div[data-testid="stToggle"] label p,
+    div[data-testid="stToggle"] svg {{
+        color: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
+        fill: {"#FFFFFF" if dark_mode else "#2F3345"} !important;
+    }
 
     /* Actual switch */
     div[data-testid="stToggle"] button[role="switch"] {{
