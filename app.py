@@ -133,12 +133,17 @@ OCCUPANCY_TAB_CONFIG = {
     },
 }
 
-raw_birthdays = st.secrets.get("BIRTHDAYS", [])
+def load_birthdays() -> list:
+    p = Path("birthdays.json")
+    if not p.exists():
+        return []
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        return [(b["name"], (b["month"], b["day"])) for b in raw]
+    except Exception:
+        return []
 
-BIRTHDAYS = [
-    (b["name"], (b["month"], b["day"]))
-    for b in raw_birthdays
-]
+BIRTHDAYS = load_birthdays()
 
 # -----------------------
 # Helpers
